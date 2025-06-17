@@ -1,5 +1,5 @@
 'use client';
-import { navItems } from '@/constants/data';
+import { navItems, navItemsNAS } from '@/constants/data';
 import {
   KBarAnimator,
   KBarPortal,
@@ -16,7 +16,7 @@ export default function KBar({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   // These action are for the navigation
-  const actions = useMemo(() => {
+  const actions1= useMemo(() => {
     // Define navigateTo inside the useMemo callback to avoid dependency array issues
     const navigateTo = (url: string) => {
       router.push(url);
@@ -53,6 +53,48 @@ export default function KBar({ children }: { children: React.ReactNode }) {
       return baseAction ? [baseAction, ...childActions] : childActions;
     });
   }, [router]);
+
+    const actions2 = useMemo(() => {
+    // Define navigateTo inside the useMemo callback to avoid dependency array issues
+    const navigateTo = (url: string) => {
+      router.push(url);
+    };
+
+    return navItemsNAS.flatMap((navItem) => {
+      // Only include base action if the navItem has a real URL and is not just a container
+      const baseAction =
+        navItem.url !== '#'
+          ? {
+              id: `${navItem.title.toLowerCase()}Action`,
+              name: navItem.title,
+              shortcut: navItem.shortcut,
+              keywords: navItem.title.toLowerCase(),
+              section: 'Navigation',
+              subtitle: `Go to ${navItem.title}`,
+              perform: () => navigateTo(navItem.url)
+            }
+          : null;
+
+      // Map child items into actions
+      const childActions =
+        navItem.items?.map((childItem) => ({
+          id: `${childItem.title.toLowerCase()}Action`,
+          name: childItem.title,
+          shortcut: childItem.shortcut,
+          keywords: childItem.title.toLowerCase(),
+          section: navItem.title,
+          subtitle: `Go to ${childItem.title}`,
+          perform: () => navigateTo(childItem.url)
+        })) ?? [];
+
+      // Return only valid actions (ignoring null base actions for containers)
+      return baseAction ? [baseAction, ...childActions] : childActions;
+    });
+  }, [router]);
+
+  const actions = [...actions1, ...actions2];
+
+console.log("actionnnnnnnns : ", actions);
 
   return (
     <KBarProvider actions={actions}>

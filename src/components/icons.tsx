@@ -30,18 +30,34 @@ import {
   IconUserX,
   IconX,
   IconLayoutKanban,
-  IconBrandGithub
+  IconBrandGithub,
+  IconPaw,
+  IconDeviceTv,
+  IconServerCog,
+  
+  IconMovie,
+  IconRadar,
+  IconSubmarine,
+  IconFolderSearch,
+  IconDownload
 } from '@tabler/icons-react';
 
 export type Icon = React.ComponentType<IconProps>;
 
 export const Icons = {
+  radarr: IconRadar,
+  sonarr: IconSubmarine,
+  prowlarr: IconFolderSearch,
+  sabnzbd: IconDownload,
   dashboard: IconLayoutDashboard,
   logo: IconCommand,
   login: IconLogin,
   close: IconX,
+  server: IconServerCog,
   product: IconShoppingBag,
   spinner: IconLoader2,
+  paw: IconPaw,
+  tv: IconDeviceTv,
   kanban: IconLayoutKanban,
   chevronLeft: IconChevronLeft,
   chevronRight: IconChevronRight,

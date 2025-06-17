@@ -21,34 +21,21 @@ export const navItems: NavItem[] = [
     shortcut: ['d', 'd'],
     items: [] // Empty array as there are no child items for Dashboard
   },
-  {
-    title: 'Product',
-    url: '/dashboard/product',
-    icon: 'product',
-    shortcut: ['p', 'p'],
+    {
+    title: 'Capri AI',
+    url: '/dashboard/capriai',
+    icon: 'paw',
+    shortcut: ['c', 'c'],
     isActive: false,
     items: [] // No child items
   },
   {
-    title: 'Account',
-    url: '#', // Placeholder as there is no direct link for the parent
-    icon: 'billing',
-    isActive: true,
-
-    items: [
-      {
-        title: 'Profile',
-        url: '/dashboard/profile',
-        icon: 'userPen',
-        shortcut: ['m', 'm']
-      },
-      {
-        title: 'Login',
-        shortcut: ['l', 'l'],
-        url: '/',
-        icon: 'login'
-      }
-    ]
+    title: 'Media',
+    url: '/dashboard/media',
+    icon: 'tv',
+    shortcut: ['m', 'm'],
+    isActive: false,
+    items: [] // No child items
   },
   {
     title: 'Kanban',
@@ -59,6 +46,45 @@ export const navItems: NavItem[] = [
     items: [] // No child items
   }
 ];
+
+export const navItemsNAS: NavItem[] = [
+    {
+    title: 'Sabnzbd',
+    url: '/dashboard/sabnzbd',
+    icon: 'sabnzbd',
+    shortcut: ['s', 's'],
+    isActive: false,
+    items: [] // No child items
+  },
+  {
+    title: 'ARR',
+    url: '#', // Placeholder as there is no direct link for the parent
+    icon: 'server',
+    isActive: false,
+
+    items: [
+      {
+        title: 'Radarr',
+        url: '/dashboard/radarr',
+        icon: 'radarr',
+        shortcut: ['r', 'r']
+      },
+      {
+        title: 'Sonarr',
+        url: '/dashboard/sonarr',
+        icon: 'sonarr',
+        shortcut: ['s', 's']
+      },
+      {
+        title: 'Prowlarr',
+        url: '/dashboard/prowlarr',
+        icon: 'prowlarr',
+        shortcut: ['p', 'p']
+      }
+    ]
+  }
+];
+
 
 export interface SaleUser {
   id: number;

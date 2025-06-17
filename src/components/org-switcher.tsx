@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, ChevronsUpDown, GalleryVerticalEnd } from 'lucide-react';
+import { Check, ChevronsUpDown, PawPrint } from 'lucide-react';
 import * as React from 'react';
 
 import {
@@ -53,31 +53,14 @@ export function OrgSwitcher({
               className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
             >
               <div className='bg-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg'>
-                <GalleryVerticalEnd className='size-4' />
+                <PawPrint className='size-6' />
               </div>
               <div className='flex flex-col gap-0.5 leading-none'>
-                <span className='font-semibold'>Next Starter</span>
+                <span className='font-semibold'>CAPRI</span>
                 <span className=''>{selectedTenant.name}</span>
               </div>
-              <ChevronsUpDown className='ml-auto' />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className='w-[--radix-dropdown-menu-trigger-width]'
-            align='start'
-          >
-            {tenants.map((tenant) => (
-              <DropdownMenuItem
-                key={tenant.id}
-                onSelect={() => handleTenantSwitch(tenant)}
-              >
-                {tenant.name}{' '}
-                {tenant.id === selectedTenant.id && (
-                  <Check className='ml-auto' />
-                )}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
