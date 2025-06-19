@@ -26,6 +26,7 @@ import {
   IconCalendar
 } from '@tabler/icons-react';
 import { radarrAPI, RadarrSystemStatus, RadarrDiskSpace, RadarrHealth, RadarrMovie } from '@/lib/radarr-api';
+import * as Sentry from '@sentry/nextjs';
 
 export function RadarrOverview() {
   const [systemStatus, setSystemStatus] = useState<RadarrSystemStatus | null>(null);
@@ -34,6 +35,13 @@ export function RadarrOverview() {
   const [movies, setMovies] = useState<RadarrMovie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  try {
+    myUndefinedFunction();
+  } catch (error) {
+    Sentry.captureException(error);
+    throw error;
+  }
 
   useEffect(() => {
     const fetchData = async () => {

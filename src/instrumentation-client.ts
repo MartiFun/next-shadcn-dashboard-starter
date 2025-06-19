@@ -5,10 +5,13 @@ import * as Sentry from '@sentry/nextjs';
 
 if (!process.env.NEXT_PUBLIC_SENTRY_DISABLED) {
   Sentry.init({
-    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    dsn: "https://1180ce6c82892b79c524935506bb8a27@o4509512263270400.ingest.de.sentry.io/4509512266022992",
 
     // Add optional integrations for additional features
-    integrations: [Sentry.replayIntegration()],
+    integrations: [
+      Sentry.replayIntegration(),
+      Sentry.consoleLoggingIntegration({ levels: ["log", "error", "warn"] })
+    ],
 
     // Adds request headers and IP for users, for more info visit
     sendDefaultPii: true,
@@ -25,7 +28,9 @@ if (!process.env.NEXT_PUBLIC_SENTRY_DISABLED) {
     replaysOnErrorSampleRate: 1.0,
 
     // Setting this option to true will print useful information to the console while you're setting up Sentry.
-    debug: false
+    debug: true,
+
+    _experiments: { enableLogs: true },
   });
 }
 
