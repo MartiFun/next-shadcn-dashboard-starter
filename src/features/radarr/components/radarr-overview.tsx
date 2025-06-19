@@ -36,12 +36,6 @@ export function RadarrOverview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  try {
-    myUndefinedFunction();
-  } catch (error) {
-    Sentry.captureException(error);
-    throw error;
-  }
 
   useEffect(() => {
     const fetchData = async () => {
