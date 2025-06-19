@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+dist
+coverage
+npm-debug.log
+yarn-error.log
+Dockerfile
+dockerfile
+.git
+.gitignore
+.vscode
+*.swp
+*.swo
+.DS_Store
+*.md
