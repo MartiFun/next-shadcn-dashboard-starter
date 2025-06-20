@@ -24,7 +24,7 @@ import {
   IconSortDescending
 } from '@tabler/icons-react';
 import { mediaAPI } from '@/lib/media-api';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Pie } from 'react-chartjs-2';
 import { Chart, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -247,10 +247,6 @@ export function MediaMovieList({ userId }: { userId: string }) {
     <div className="space-y-6">
       {/* Message de bienvenue et statistiques */}
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <IconMovie className="h-6 w-6 text-primary" />
-          Media Library 👋
-        </h2>
         <Badge variant="outline" className="text-sm bg-primary/10 text-primary border-primary/20">
           {totalMovies} films
         </Badge>
@@ -462,13 +458,19 @@ export function MediaMovieList({ userId }: { userId: string }) {
         {currentPageMovies.map((movie) => (
           <div 
             key={movie.Id} 
-            className="overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:rotate-0.5 hover:shadow-2xl cursor-pointer w-[180px] h-[270px] sm:w-[180px] sm:h-[270px] group bg-card text-card-foreground rounded-xl border shadow-sm mx-auto"
+            className="overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:rotate-0.5 hover:shadow-2xl cursor-pointer w-[180px] h-[270px] sm:w-[180px] sm:h-[270px] group bg-card text-card-foreground rounded-xl border shadow-sm mx-auto relative"
             style={{
               transformStyle: 'preserve-3d',
               perspective: '1000px'
             }}
-            onClick={() => router.push(`/dashboard/media/${movie.Id}`)}
+            onClick={() => router.push(`/dashboard/media/${movie.Id}?user=${userId}`)}
           >
+            {/* Checkmark vu */}
+            {movie.UserData?.Played && (
+              <div className="absolute top-2 right-2 z-20">
+                <CheckCircle2 className="h-5 w-5 text-green-500 drop-shadow-lg" aria-label="Vu" />
+              </div>
+            )}
             <div className="relative w-full h-full">
               {getPosterUrl(movie, userId) ? (
                 <img

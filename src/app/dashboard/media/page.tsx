@@ -12,6 +12,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+// Helpers pour cookie
+function setCookie(name: string, value: string, days = 365) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+}
+function getCookie(name: string): string | null {
+  return document.cookie.split('; ').reduce((r, v) => {
+    const parts = v.split('=');
+    return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+  }, null as string | null);
+}
+
 export default function MediaPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -22,11 +34,22 @@ export default function MediaPage() {
     mediaAPI.getEmbyUsers().then(res => {
       if (res.ok && res.body?.Items) {
         setUsers(res.body.Items);
-        if (res.body.Items.length > 0) setSelectedUserId(res.body.Items[0].Id);
+        // Initialiser depuis cookie si présent
+        const cookieUserId = getCookie('emby_user_id');
+        if (cookieUserId && res.body.Items.some((u: any) => u.Id === cookieUserId)) {
+          setSelectedUserId(cookieUserId);
+        } else if (res.body.Items.length > 0) {
+          setSelectedUserId(res.body.Items[0].Id);
+        }
       }
       setUsersLoading(false);
     });
   }, []);
+
+  // Persiste le userId à chaque changement
+  useEffect(() => {
+    if (selectedUserId) setCookie('emby_user_id', selectedUserId);
+  }, [selectedUserId]);
 
   return (
     <PageContainer>
