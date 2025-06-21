@@ -29,6 +29,16 @@ import { Progress } from '@/components/ui/progress';
 import { Pie } from 'react-chartjs-2';
 import { Chart, ArcElement, Tooltip, Legend } from 'chart.js';
 import { useRouter } from 'next/navigation';
+import { 
+  ChartContainer, 
+  ChartTooltip, 
+  ChartTooltipContent 
+} from '@/components/ui/chart';
+import { 
+  PieChart, 
+  Pie as RechartsPie, 
+  Label 
+} from 'recharts';
 Chart.register(ArcElement, Tooltip, Legend);
 
 const ITEMS_PER_PAGE = 50;
@@ -80,8 +90,8 @@ export function MediaMovieList({ userId }: { userId: string }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState<'title' | 'year' | 'rating'>('title');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<'title' | 'year' | 'rating'>('rating');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [latestMovies, setLatestMovies] = useState<EmbyMovie[]>([]);
   const [latestLoading, setLatestLoading] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -201,6 +211,23 @@ export function MediaMovieList({ userId }: { userId: string }) {
   const genreLabels = Object.keys(genreCount);
   const genreData = Object.values(genreCount);
 
+  // Préparer les données pour Recharts
+  const chartData = genreLabels.map((genre, index) => ({
+    name: genre,
+    value: genreData[index],
+    fill: `url(#fill${genre.replace(/\s+/g, '')})`
+  }));
+
+  const totalGenres = genreData.reduce((acc, val) => acc + val, 0);
+
+  // Configuration du graphique
+  const chartConfig = {
+    genres: {
+      label: 'Genres',
+      color: 'hsl(var(--primary))'
+    }
+  };
+
   const avgYear = totalMovies > 0 ? Math.round(allMovies.reduce((acc, m) => acc + (m.ProductionYear || 0), 0) / totalMovies) : 0;
   const avgDuration = totalMovies > 0 ? Math.round(allMovies.reduce((acc, m) => acc + ticksToMinutes(m.RunTimeTicks), 0) / totalMovies) : 0;
 
@@ -255,7 +282,7 @@ export function MediaMovieList({ userId }: { userId: string }) {
       {/* Layout stats + carousel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch mb-6 *:data-[slot=card]:bg-gradient-to-t">
         {/* 2 cartes stats à gauche (1x2) */}
-        <div className="grid grid-cols-1 gap-4 col-span-1">
+        <div className="grid grid-cols-1 gap-4 col-span-1 *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
           {/* 1. Films vus */}
           <Card className="@container/card relative overflow-hidden max-h-[400px]">
             <CardHeader>
@@ -285,103 +312,162 @@ export function MediaMovieList({ userId }: { userId: string }) {
               <CardDescription>Genres</CardDescription>
               <CardTitle className="text-xl font-semibold">Répartition</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center max-h-[220px]">
+            <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
               {genreLabels.length > 0 ? (
-                <Pie
-                  data={{
-                    labels: genreLabels,
-                    datasets: [
-                      {
-                        data: genreData,
-                        backgroundColor: [
-                          // Utilise la couleur principale du thème pour le premier genre, puis palette par défaut
-                          typeof window !== 'undefined'
-                            ? getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#38bdf8'
-                            : '#38bdf8',
-                          '#38bdf8', '#fbbf24', '#f472b6', '#818cf8', '#f87171', '#34d399', '#facc15', '#60a5fa', '#f472b6', '#f87171', '#818cf8', '#a3e635', '#fbbf24', '#34d399', '#facc15', '#60a5fa', '#f472b6', '#f87171', '#818cf8',
-                        ],
-                      },
-                    ],
-                  }}
-                  options={{ plugins: { legend: { display: false } }, cutout: '60%' }}
-                  width={90}
-                  height={90}
-                />
+                <ChartContainer
+                  config={chartConfig}
+                  className="mx-auto aspect-square h-[250px]"
+                >
+                  <PieChart>
+                    <defs>
+                      {genreLabels.map((genre, index) => (
+                        <linearGradient
+                          key={genre}
+                          id={`fill${genre.replace(/\s+/g, '')}`}
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="0%"
+                            stopColor="var(--primary)"
+                            stopOpacity={1 - index * 0.15}
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor="var(--primary)"
+                            stopOpacity={0.8 - index * 0.15}
+                          />
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent hideLabel />}
+                    />
+                    <RechartsPie
+                      data={chartData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={60}
+                      strokeWidth={2}
+                      stroke="var(--background)"
+                    >
+                      <Label
+                        content={({ viewBox }) => {
+                          if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+                            return (
+                              <text
+                                x={viewBox.cx}
+                                y={viewBox.cy}
+                                textAnchor="middle"
+                                dominantBaseline="middle"
+                              >
+                                <tspan
+                                  x={viewBox.cx}
+                                  y={viewBox.cy}
+                                  className="fill-foreground text-3xl font-bold"
+                                >
+                                  {totalGenres.toLocaleString()}
+                                </tspan>
+                                <tspan
+                                  x={viewBox.cx}
+                                  y={(viewBox.cy || 0) + 24}
+                                  className="fill-muted-foreground text-sm"
+                                >
+                                  Total Genres
+                                </tspan>
+                              </text>
+                            );
+                          }
+                        }}
+                      />
+                    </RechartsPie>
+                  </PieChart>
+                </ChartContainer>
               ) : (
-                <div className="text-muted-foreground text-sm">Aucun genre</div>
+                <div className="text-muted-foreground text-sm text-center">Aucun genre</div>
               )}
-              <div className="flex flex-wrap justify-center gap-1 mt-2">
-                {genreLabels.slice(0, 4).map((g, i) => (
-                  <span key={g} className="text-xs px-2 py-1 rounded bg-accent text-accent-foreground">{g}</span>
-                ))}
-                {genreLabels.length > 4 && <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground">+{genreLabels.length - 4} autres</span>}
-              </div>
             </CardContent>
+            <CardFooter className="flex-col gap-2 text-sm">
+              {genreLabels.length > 0 && (
+                <>
+                  <div className="flex items-center gap-2 leading-none font-medium">
+                    {genreLabels[0]} domine avec{' '}
+                    {((genreData[0] / totalGenres) * 100).toFixed(1)}%{' '}
+                    <IconTrendingUp className="h-4 w-4" />
+                  </div>
+                  <div className="text-muted-foreground leading-none">
+                    Répartition des genres dans votre bibliothèque
+                  </div>
+                </>
+              )}
+            </CardFooter>
           </Card>
         </div>
         {/* Carousel à droite, largeur 2 cartes */}
         <div className="col-span-1 lg:col-span-2 flex flex-col justify-stretch">
-          <Card className="@container/card h-full flex flex-col">
-            <CardHeader />
-            <CardContent className="flex-1 flex flex-col justify-center">
-              <div className="flex flex-col items-center w-full h-full justify-center">
-                <div className="relative w-full h-full min-h-[320px] flex items-center justify-center">
-                  {latestLoading ? (
-                    <Skeleton className="h-full w-full rounded-xl" />
-                  ) : latestMovies.length === 0 ? (
-                    <div className="flex items-center text-muted-foreground h-full w-full justify-center">Aucun film récent</div>
-                  ) : (
-                    <div className="flex flex-col items-center w-full h-full group">
-                      <div className="absolute inset-0 w-full h-full">
-                        {getBackdropUrl(latestMovies[carouselIndex], userId) ? (
-                          <>
-                            <img
-                              src={getBackdropUrl(latestMovies[carouselIndex], userId)}
-                              alt={latestMovies[carouselIndex].Name}
-                              className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-md transition-transform duration-300 group-hover:scale-102 group-hover:shadow-2xl"
-                              loading="lazy"
-                            />
-                            {/* Overlay noir transparent réduit et animé */}
-                            <div className="absolute inset-0 w-full h-full bg-black/70 rounded-lg transition-transform duration-300 group-hover:scale-102" />
-                            {/* Titre centré */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-                              <div className="font-bold text-xl text-white text-center drop-shadow-lg px-4 line-clamp-2" title={latestMovies[carouselIndex].Name}>
-                                {latestMovies[carouselIndex].Name}
-                              </div>
-                              <div className="text-sm text-white/80 mt-2 drop-shadow-lg">
-                                {latestMovies[carouselIndex].ProductionYear}
-                              </div>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-muted rounded-lg">
-                            <IconMovie className="h-16 w-16 text-muted-foreground" />
-                          </div>
-                        )}
+          <div className="relative w-full h-full min-h-[320px] flex items-center justify-center rounded-xl overflow-hidden">
+            {latestLoading ? (
+              <Skeleton className="h-full w-full rounded-xl" />
+            ) : latestMovies.length === 0 ? (
+              <div className="flex items-center text-muted-foreground h-full w-full justify-center bg-muted rounded-xl">Aucun film récent</div>
+            ) : (
+              <div className="flex flex-col items-center w-full h-full group cursor-pointer" onClick={() => router.push(`/dashboard/media/${latestMovies[carouselIndex].Id}?user=${userId}`)}>
+                <div className="absolute inset-0 w-full h-full">
+                  {getBackdropUrl(latestMovies[carouselIndex], userId) ? (
+                    <>
+                      <img
+                        src={getBackdropUrl(latestMovies[carouselIndex], userId)}
+                        alt={latestMovies[carouselIndex].Name}
+                        className="absolute inset-0 w-full h-full object-cover rounded-xl shadow-md transition-transform duration-300 group-hover:scale-102 group-hover:shadow-2xl"
+                        loading="lazy"
+                      />
+                      {/* Overlay noir transparent réduit et animé */}
+                      <div className="absolute inset-0 w-full h-full bg-black/50 rounded-xl transition-transform duration-300 group-hover:scale-102" />
+                      {/* Titre centré */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                        <div className="font-bold text-xl text-white text-center drop-shadow-lg px-4 line-clamp-2" title={latestMovies[carouselIndex].Name}>
+                          {latestMovies[carouselIndex].Name}
+                        </div>
+                        <div className="text-sm text-white/80 mt-2 drop-shadow-lg">
+                          {latestMovies[carouselIndex].ProductionYear}
+                        </div>
                       </div>
+                      
+                      {/* Dots navigation à l'intérieur */}
+                      {latestMovies.length > 1 && (
+                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
+                          {latestMovies.map((_, idx) => (
+                            <button
+                              key={idx}
+                              className={`h-2 w-6 rounded-full transition-all ${carouselIndex === idx ? 'bg-primary' : 'bg-primary/30'} cursor-pointer hover:bg-primary/60`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCarouselIndex(idx);
+                              }}
+                              aria-label={`Aller au film ${idx + 1}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-muted rounded-xl">
+                      <IconMovie className="h-16 w-16 text-muted-foreground" />
                     </div>
                   )}
                 </div>
-                {/* Dots navigation */}
-                {latestMovies.length > 1 && !latestLoading && (
-                  <div className="flex gap-2 mt-4">
-                    {latestMovies.map((_, idx) => (
-                      <button
-                        key={idx}
-                        className={`h-2 w-6 rounded-full transition-all ${carouselIndex === idx ? 'bg-primary' : 'bg-muted'} cursor-pointer`}
-                        onClick={() => setCarouselIndex(idx)}
-                        aria-label={`Aller au film ${idx + 1}`}
-                      />
-                    ))}
-                  </div>
-                )}
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
         </div>
       </div>
 
+
       {/* Barre de recherche et filtres */}
+      <div className="grid grid-cols-1 gap-4 col-span-1 *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -402,26 +488,26 @@ export function MediaMovieList({ userId }: { userId: string }) {
             </div>
             <div className="flex gap-2">
               <Button
-                variant="outline"
+                variant={sortBy === 'title' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSortBy('title')}
-                className={(sortBy === 'title' ? 'bg-muted text-foreground ' : '') + 'cursor-pointer'}
+                className="cursor-pointer"
               >
                 Title
               </Button>
               <Button
-                variant="outline"
+                variant={sortBy === 'year' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSortBy('year')}
-                className={(sortBy === 'year' ? 'bg-muted text-foreground ' : '') + 'cursor-pointer'}
+                className="cursor-pointer"
               >
                 Year
               </Button>
               <Button
-                variant="outline"
+                variant={sortBy === 'rating' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSortBy('rating')}
-                className={(sortBy === 'rating' ? 'bg-muted text-foreground ' : '') + 'cursor-pointer'}
+                className="cursor-pointer"
               >
                 Rating
               </Button>
@@ -452,13 +538,13 @@ export function MediaMovieList({ userId }: { userId: string }) {
           </div>
         </CardContent>
       </Card>
-
+</div>     
       {/* Grille de films */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
         {currentPageMovies.map((movie) => (
           <div 
             key={movie.Id} 
-            className="overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:rotate-0.5 hover:shadow-2xl cursor-pointer w-[180px] h-[270px] sm:w-[180px] sm:h-[270px] group bg-card text-card-foreground rounded-xl border shadow-sm mx-auto relative"
+            className="overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:rotate-0.5 hover:shadow-2xl cursor-pointer w-full h-[440px] group bg-gradient-to-t from-primary/5 to-card dark:bg-card text-card-foreground rounded-xl mx-auto relative flex flex-col shadow-xs"
             style={{
               transformStyle: 'preserve-3d',
               perspective: '1000px'
@@ -471,51 +557,46 @@ export function MediaMovieList({ userId }: { userId: string }) {
                 <CheckCircle2 className="h-5 w-5 text-green-500 drop-shadow-lg" aria-label="Vu" />
               </div>
             )}
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-[360px] flex-shrink-0">
               {getPosterUrl(movie, userId) ? (
                 <img
                   src={getPosterUrl(movie, userId)}
                   alt={movie.Name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 rounded-lg"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-t-lg"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     e.currentTarget.nextElementSibling?.classList.remove('hidden');
                   }}
                   loading="lazy"
-                  style={{ width: '180px', height: '270px', maxWidth: '100%', maxHeight: '100%' }}
                 />
               ) : null}
-              <div className={`w-full h-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center ${getPosterUrl(movie, userId) ? 'hidden' : ''}`} style={{ width: '180px', height: '270px', maxWidth: '100%', maxHeight: '100%' }}>
+              <div className={`w-full h-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center rounded-t-lg ${getPosterUrl(movie, userId) ? 'hidden' : ''}`}>
                 <IconMovie className="h-24 w-24 text-muted-foreground" />
               </div>
-              {/* Overlay noir permanent sous le titre */}
-              <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-black/90 via-black/40 to-transparent rounded-b-lg z-10" />
-              {/* Informations en bas */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
-                <div className="space-y-2">
-                  <h3 className="font-bold text-lg text-white drop-shadow-lg line-clamp-2" title={movie.Name}>
-                    {movie.Name}
-                  </h3>
-                  
-                  <div className="flex items-center gap-3 text-white/90 text-sm">
-                    <span className="font-medium">{movie.ProductionYear}</span>
-                    {movie.CommunityRating && (
-                      <div className="flex items-center gap-1">
-                        <IconStar className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span>{movie.CommunityRating.toFixed(1)}</span>
-                      </div>
-                    )}
-                    {movie.RunTimeTicks && (
-                      <div className="flex items-center gap-1">
-                        <IconClock className="h-4 w-4" />
-                        <span>{ticksToMinutes(movie.RunTimeTicks)}min</span>
-                      </div>
-                    )}
+            </div>
+            
+            {/* Informations sous l'image - collé au bas */}
+            <div className="p-3 space-y-2 flex-1 flex flex-col justify-end">
+              <h3 className="font-bold text-sm text-foreground line-clamp-2" title={movie.Name}>
+                {movie.Name}
+              </h3>
+              
+              <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                <span className="font-medium">{movie.ProductionYear}</span>
+                {movie.CommunityRating && (
+                  <div className="flex items-center gap-1">
+                    <IconStar className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    <span>{movie.CommunityRating.toFixed(1)}</span>
                   </div>
-                </div>
+                )}
+                {movie.RunTimeTicks && (
+                  <div className="flex items-center gap-1">
+                    <IconClock className="h-3 w-3" />
+                    <span>{ticksToMinutes(movie.RunTimeTicks)}min</span>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="mt-2 px-2 text-center font-bold text-base truncate" title={movie.Name}>{movie.Name}</div>
           </div>
         ))}
       </div>
