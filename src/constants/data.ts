@@ -31,11 +31,24 @@ export const navItems: NavItem[] = [
   },
   {
     title: 'Media',
-    url: '/dashboard/media',
+    url: '#',
     icon: 'tv',
     shortcut: ['m', 'm'],
     isActive: false,
-    items: [] // No child items
+    items: [
+      {
+        title: 'Media Library',
+        url: '/dashboard/media',
+        icon: 'media',
+        shortcut: ['m', 'l']
+      },
+      {
+        title: 'Jellyfin',
+        url: '/dashboard/jellyfin',
+        icon: 'tv',
+        shortcut: ['j', 'j']
+      }
+    ]
   },
   {
     title: 'Kanban',
